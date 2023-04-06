@@ -15,12 +15,7 @@ public abstract class ValueObject : IComparable, IComparable<ValueObject>
 
     public static bool operator ==(ValueObject a, ValueObject b)
     {
-        if (a is null && b is null)
-        {
-            return true;
-        }
-
-        return a is not null && b is not null && a.Equals(b);
+        return (a is null && b is null) || (a is not null && b is not null && a.Equals(b));
     }
 
     public int CompareTo(object? obj)
@@ -35,7 +30,7 @@ public abstract class ValueObject : IComparable, IComparable<ValueObject>
 
         if (thisType != otherType)
         {
-            return string.Compare(thisType.ToString(), otherType.ToString(), StringComparison.Ordinal);
+            return string.Compare(thisType?.ToString(), otherType?.ToString(), StringComparison.Ordinal);
         }
 
         var other = (ValueObject)obj;
@@ -94,7 +89,7 @@ public abstract class ValueObject : IComparable, IComparable<ValueObject>
         return _cachedHashCode.Value;
     }
 
-    internal static Type GetUnproxiedType(object obj)
+    internal static Type? GetUnproxiedType(object obj)
     {
         ArgumentNullException.ThrowIfNull(obj);
 
@@ -116,17 +111,11 @@ public abstract class ValueObject : IComparable, IComparable<ValueObject>
             return 0;
         }
 
-        if (object1 is null)
-        {
-            return -1;
-        }
-
-        if (object2 is null)
-        {
-            return 1;
-        }
-
-        return object1 is IComparable comparable1 && object2 is IComparable comparable2
+        return object1 is null
+            ? -1
+            : object2 is null
+            ? 1
+            : object1 is IComparable comparable1 && object2 is IComparable comparable2
             ? comparable1.CompareTo(comparable2)
             : object1.Equals(object2) ? 0 : -1;
     }
