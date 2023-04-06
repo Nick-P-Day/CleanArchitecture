@@ -6,44 +6,45 @@ namespace Clean.Architecture.Web.Endpoints.ContributorEndpoints;
 
 public class Update : Endpoint<UpdateContributorRequest, UpdateContributorResponse>
 {
-  private readonly IRepository<Contributor> _repository;
+    private readonly IRepository<Contributor> _repository;
 
-  public Update(IRepository<Contributor> repository)
-  {
-    _repository = repository;
-  }
-
-  public override void Configure()
-  {
-    Put(CreateContributorRequest.Route);
-    AllowAnonymous();
-    Options(x => x
-      .WithTags("ContributorEndpoints"));
-  }
-  public override async Task HandleAsync(
-    UpdateContributorRequest request,
-    CancellationToken cancellationToken)
-  {
-    if (request.Name == null)
+    public Update(IRepository<Contributor> repository)
     {
-      ThrowError("Name is required");
+        _repository = repository;
     }
 
-    var existingContributor = await _repository.GetByIdAsync(request.Id, cancellationToken);
-    if (existingContributor == null)
+    public override void Configure()
     {
-      await SendNotFoundAsync(cancellationToken);
-      return;
+        Put(CreateContributorRequest.Route);
+        AllowAnonymous();
+        Options(x => x
+          .WithTags("ContributorEndpoints"));
     }
 
-    existingContributor.UpdateName(request.Name);
+    public override async Task HandleAsync(
+      UpdateContributorRequest request,
+      CancellationToken cancellationToken)
+    {
+        if (request.Name == null)
+        {
+            ThrowError("Name is required");
+        }
 
-    await _repository.UpdateAsync(existingContributor, cancellationToken);
+        var existingContributor = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        if (existingContributor == null)
+        {
+            await SendNotFoundAsync(cancellationToken);
+            return;
+        }
 
-    var response = new UpdateContributorResponse(
-        contributor: new ContributorRecord(existingContributor.Id, existingContributor.Name)
-    );
+        existingContributor.UpdateName(request.Name);
 
-    await SendAsync(response, cancellation: cancellationToken);
-  }
+        await _repository.UpdateAsync(existingContributor, cancellationToken);
+
+        var response = new UpdateContributorResponse(
+            contributor: new ContributorRecord(existingContributor.Id, existingContributor.Name)
+        );
+
+        await SendAsync(response, cancellation: cancellationToken);
+    }
 }

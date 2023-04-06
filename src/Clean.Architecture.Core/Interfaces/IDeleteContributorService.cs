@@ -1,4 +1,4 @@
-using Ardalis.Result;
+﻿using Ardalis.Result;
 
 namespace Clean.Architecture.Core.Interfaces;
 

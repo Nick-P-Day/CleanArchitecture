@@ -1,122 +1,133 @@
 ﻿namespace Clean.Architecture.SharedKernel;
 
 /// <summary>
-/// See: https://enterprisecraftsmanship.com/posts/value-object-better-implementation/
+///   See: https://enterprisecraftsmanship.com/posts/value-object-better-implementation/
 /// </summary>
 [Serializable]
 public abstract class ValueObject : IComparable, IComparable<ValueObject>
 {
-  private int? _cachedHashCode;
+    private int? _cachedHashCode;
 
-  protected abstract IEnumerable<object> GetEqualityComponents();
-
-  public override bool Equals(object? obj)
-  {
-    if (obj == null)
-      return false;
-
-    if (GetUnproxiedType(this) != GetUnproxiedType(obj))
-      return false;
-
-    var valueObject = (ValueObject)obj;
-
-    return GetEqualityComponents().SequenceEqual(valueObject.GetEqualityComponents());
-  }
-
-  public override int GetHashCode()
-  {
-    if (!_cachedHashCode.HasValue)
+    public static bool operator !=(ValueObject a, ValueObject b)
     {
-      _cachedHashCode = GetEqualityComponents()
-          .Aggregate(1, (current, obj) =>
-          {
-            unchecked
+        return !(a == b);
+    }
+
+    public static bool operator ==(ValueObject a, ValueObject b)
+    {
+        if (a is null && b is null)
+        {
+            return true;
+        }
+
+        return a is not null && b is not null && a.Equals(b);
+    }
+
+    public int CompareTo(object? obj)
+    {
+        if (obj == null)
+        {
+            return 1;
+        }
+
+        var thisType = GetUnproxiedType(this);
+        var otherType = GetUnproxiedType(obj);
+
+        if (thisType != otherType)
+        {
+            return string.Compare(thisType.ToString(), otherType.ToString(), StringComparison.Ordinal);
+        }
+
+        var other = (ValueObject)obj;
+
+        var components = GetEqualityComponents().ToArray();
+        var otherComponents = other.GetEqualityComponents().ToArray();
+
+        for (var i = 0; i < components.Length; i++)
+        {
+            var comparison = CompareComponents(components[i], otherComponents[i]);
+            if (comparison != 0)
             {
-              return current * 23 + (obj?.GetHashCode() ?? 0);
+                return comparison;
             }
-          });
+        }
+
+        return 0;
     }
 
-    return _cachedHashCode.Value;
-  }
-
-  public int CompareTo(object? obj)
-  {
-    if (obj == null)
-      return 1;
-
-    var thisType = GetUnproxiedType(this);
-    var otherType = GetUnproxiedType(obj);
-
-    if (thisType != otherType)
-      return string.Compare(thisType.ToString(), otherType.ToString(), StringComparison.Ordinal);
-
-    var other = (ValueObject)obj;
-
-    var components = GetEqualityComponents().ToArray();
-    var otherComponents = other.GetEqualityComponents().ToArray();
-
-    for (var i = 0; i < components.Length; i++)
+    public int CompareTo(ValueObject? other)
     {
-      var comparison = CompareComponents(components[i], otherComponents[i]);
-      if (comparison != 0)
-        return comparison;
+        return CompareTo(other as object);
     }
 
-    return 0;
-  }
+    public override bool Equals(object? obj)
+    {
+        if (obj == null)
+        {
+            return false;
+        }
 
-  private static int CompareComponents(object? object1, object? object2)
-  {
-    if (object1 is null && object2 is null)
-      return 0;
+        if (GetUnproxiedType(this) != GetUnproxiedType(obj))
+        {
+            return false;
+        }
 
-    if (object1 is null)
-      return -1;
+        var valueObject = (ValueObject)obj;
 
-    if (object2 is null)
-      return 1;
+        return GetEqualityComponents().SequenceEqual(valueObject.GetEqualityComponents());
+    }
 
-    if (object1 is IComparable comparable1 && object2 is IComparable comparable2)
-      return comparable1.CompareTo(comparable2);
+    public override int GetHashCode()
+    {
+        if (!_cachedHashCode.HasValue)
+        {
+            _cachedHashCode = GetEqualityComponents()
+                .Aggregate(1, (current, obj) =>
+                {
+                    unchecked
+                    {
+                        return (current * 23) + (obj?.GetHashCode() ?? 0);
+                    }
+                });
+        }
 
-    return object1.Equals(object2) ? 0 : -1;
-  }
+        return _cachedHashCode.Value;
+    }
 
-  public int CompareTo(ValueObject? other)
-  {
-    return CompareTo(other as object);
-  }
+    internal static Type GetUnproxiedType(object obj)
+    {
+        ArgumentNullException.ThrowIfNull(obj);
 
-  public static bool operator ==(ValueObject a, ValueObject b)
-  {
-    if (a is null && b is null)
-      return true;
+        const string EFCoreProxyPrefix = "Castle.Proxies.";
+        const string NHibernateProxyPostfix = "Proxy";
 
-    if (a is null || b is null)
-      return false;
+        var type = obj.GetType();
+        var typeString = type.ToString();
 
-    return a.Equals(b);
-  }
+        return typeString.Contains(EFCoreProxyPrefix) || typeString.EndsWith(NHibernateProxyPostfix) ? type.BaseType : type;
+    }
 
-  public static bool operator !=(ValueObject a, ValueObject b)
-  {
-    return !(a == b);
-  }
+    protected abstract IEnumerable<object> GetEqualityComponents();
 
-  internal static Type GetUnproxiedType(object obj)
-  {
-    ArgumentNullException.ThrowIfNull(obj);
+    private static int CompareComponents(object? object1, object? object2)
+    {
+        if (object1 is null && object2 is null)
+        {
+            return 0;
+        }
 
-    const string EFCoreProxyPrefix = "Castle.Proxies.";
-    const string NHibernateProxyPostfix = "Proxy";
+        if (object1 is null)
+        {
+            return -1;
+        }
 
-    var type = obj.GetType();
-    var typeString = type.ToString();
+        if (object2 is null)
+        {
+            return 1;
+        }
 
-    if (typeString.Contains(EFCoreProxyPrefix) || typeString.EndsWith(NHibernateProxyPostfix))
-      return type.BaseType!;
-
-    return type;
-  }
+        return object1 is IComparable comparable1 && object2 is IComparable comparable2
+            ? comparable1.CompareTo(comparable2)
+            : object1.Equals(object2) ? 0 : -1;
+    }
 }

@@ -5,9 +5,9 @@ namespace Clean.Architecture.Core.ProjectAggregate.Specifications;
 
 public class ContributorByIdSpec : Specification<Contributor>, ISingleResultSpecification
 {
-  public ContributorByIdSpec(int contributorId)
-  {
-    Query
-        .Where(contributor => contributor.Id == contributorId);
-  }
+    public ContributorByIdSpec(int contributorId)
+    {
+        Query
+            .Where(contributor => contributor.Id == contributorId);
+    }
 }

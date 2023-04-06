@@ -4,19 +4,19 @@ namespace Clean.Architecture.Web.ViewModels;
 
 public class ToDoItemViewModel
 {
-  public int Id { get; set; }
-  public string? Title { get; set; }
-  public string? Description { get; set; }
-  public bool IsDone { get; private set; }
+    public string? Description { get; set; }
+    public int Id { get; set; }
+    public bool IsDone { get; private set; }
+    public string? Title { get; set; }
 
-  public static ToDoItemViewModel FromToDoItem(ToDoItem item)
-  {
-    return new ToDoItemViewModel()
+    public static ToDoItemViewModel FromToDoItem(ToDoItem item)
     {
-      Id = item.Id,
-      Title = item.Title,
-      Description = item.Description,
-      IsDone = item.IsDone
-    };
-  }
+        return new ToDoItemViewModel()
+        {
+            Id = item.Id,
+            Title = item.Title,
+            Description = item.Description,
+            IsDone = item.IsDone
+        };
+    }
 }

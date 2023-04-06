@@ -6,38 +6,38 @@ namespace Clean.Architecture.Core.ProjectAggregate;
 
 public class ToDoItem : EntityBase
 {
-  public string Title { get; set; } = string.Empty;
-  public string Description { get; set; } = string.Empty;
-  public int? ContributorId { get; private set; }
-  public bool IsDone { get; private set; }
+    public int? ContributorId { get; private set; }
+    public string Description { get; set; } = string.Empty;
+    public bool IsDone { get; private set; }
+    public string Title { get; set; } = string.Empty;
 
-  public void MarkComplete()
-  {
-    if (!IsDone)
+    public void AddContributor(int contributorId)
     {
-      IsDone = true;
+        Guard.Against.Null(contributorId, nameof(contributorId));
+        ContributorId = contributorId;
 
-      RegisterDomainEvent(new ToDoItemCompletedEvent(this));
+        var contributorAddedToItem = new ContributorAddedToItemEvent(this, contributorId);
+        base.RegisterDomainEvent(contributorAddedToItem);
     }
-  }
 
-  public void AddContributor(int contributorId)
-  {
-    Guard.Against.Null(contributorId, nameof(contributorId));
-    ContributorId = contributorId;
+    public void MarkComplete()
+    {
+        if (!IsDone)
+        {
+            IsDone = true;
 
-    var contributorAddedToItem = new ContributorAddedToItemEvent(this, contributorId);
-    base.RegisterDomainEvent(contributorAddedToItem);
-  }
+            RegisterDomainEvent(new ToDoItemCompletedEvent(this));
+        }
+    }
 
-  public void RemoveContributor()
-  {
-    ContributorId = null;
-  }
+    public void RemoveContributor()
+    {
+        ContributorId = null;
+    }
 
-  public override string ToString()
-  {
-    string status = IsDone ? "Done!" : "Not done.";
-    return $"{Id}: Status: {status} - {Title} - {Description}";
-  }
+    public override string ToString()
+    {
+        var status = IsDone ? "Done!" : "Not done.";
+        return $"{Id}: Status: {status} - {Title} - {Description}";
+    }
 }

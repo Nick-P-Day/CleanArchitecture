@@ -3,23 +3,25 @@ using Clean.Architecture.Core.ProjectAggregate;
 
 namespace Clean.Architecture.Web.ApiModels;
 
-// ApiModel DTOs are used by ApiController classes and are typically kept in a side-by-side folder
+// ApiModel DTOs are used by ApiController classes and are typically kept in a
+// side-by-side folder
 public class ToDoItemDTO
 {
-  public int Id { get; set; }
-  [Required]
-  public string? Title { get; set; }
-  public string? Description { get; set; }
-  public bool IsDone { get; private set; }
+    public string? Description { get; set; }
+    public int Id { get; set; }
+    public bool IsDone { get; private set; }
 
-  public static ToDoItemDTO FromToDoItem(ToDoItem item)
-  {
-    return new ToDoItemDTO()
+    [Required]
+    public string? Title { get; set; }
+
+    public static ToDoItemDTO FromToDoItem(ToDoItem item)
     {
-      Id = item.Id,
-      Title = item.Title,
-      Description = item.Description,
-      IsDone = item.IsDone
-    };
-  }
+        return new ToDoItemDTO()
+        {
+            Id = item.Id,
+            Title = item.Title,
+            Description = item.Description,
+            IsDone = item.IsDone
+        };
+    }
 }
